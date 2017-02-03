@@ -1,0 +1,158 @@
+---
+title: "Coursera, Practical Machine Learning, Project"
+author: "Malgorzata MS"
+date: "February 3, 2017"
+output: html_document
+---
+
+
+# Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+# Data
+
+The training data for this project are available here:
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har
+
+# Summary
+First a data frame containing only variables useful as predictors was created. Next different models - linear  discriminant analysis, support vector machine, random forest, and generalized boosted modeling -  were applied to fit the training data set. Testing the models on validation set indicated accuracy of random forest equal to 1, with CI equal to (0.9991, 1).This was the best result in compare to other models. Therefore the random forest was the final model used to predict the manner of activity for the 20 cases of testing dataset. 
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+```
+      
+# Download and load the data   
+```{r, eval=FALSE}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+download.file(fileUrl, "./training.csv")
+
+fileUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+download.file(fileUrl, "./testing.csv")
+```
+
+```{r}
+training <- read.csv("training.csv")
+testing <- read.csv("testing.csv")
+# The first column, which is user number is removed since the information is already in the variable user_name
+training <- training[,-1]
+testing <- testing[,-1]
+```
+
+#### Assigning seed for reproducibility
+```{r}
+seed <- 123
+```
+
+# Create ```training```  and ```validation``` dataset (```validation``` will be used to validate the out of sample error)
+```{r}
+library(caret)
+set.seed(seed)
+inTrain <- createDataPartition(y=training$classe, p=0.7, list=FALSE)
+training <- training[inTrain,]
+validation <- training[-inTrain,]
+```
+
+Dimensions of the 2 data sets:
+```{r}
+dim(training); dim(validation);
+```
+
+# Data exploration
+```{r, eval=FALSE}
+str(training)
+```
+
+# Creating data frame with predictors
+There is a lot of columns with mostly NA values and hence this features will not be useful as predictors. Therefore, these columns will not be considered in the model.
+
+```{r}
+# Delete columns with mostly NA
+temp <- apply(training, 2, is.na)
+noNa <-  which((colSums(temp)) == 0)
+training <- training[,noNa]
+dim(training)
+```
+
+Next by using function ```nearZeroVar()```, variables with very low variance were found and removed from the training set. This was done, because variables with almost no variance are poor predictors. 
+```{r}
+# Store the user_name, and classe columns in new data frame
+library(dplyr)
+user_classe <- dplyr::select(training, user_name, classe)
+training <- dplyr::select(training, -user_name, -classe)
+
+# Remove columns with near zero variance from the training set
+nzv <- nearZeroVar(training, saveMetrics = TRUE)
+training <- training[,nzv$nzv == FALSE]
+dim(training)
+names(training)
+```
+
+In addition columns "raw_timestamp_part_1" "raw_timestamp_part_2" "cvtd_timestamp", and "num_window", were removed since they do not contain information from sensors.
+```{r}
+training <- training[,-c(3:6)]
+```
+
+Bind ```user_classe``` and ```training``` into one data frame.
+```{r}
+training <- data.frame(cbind(user_classe, training))
+dim(training)
+```
+
+
+# Model fitting
+Different models were fit in order to find the one with the best performance. 
+The resampling method for all models was set to cross validation (```method```="cv") by function ```trainControl()```. The number of k-fold was set to 10 (the default value). 
+For random forest the ```ntree``` was set to 30 to have reasonable computing time. Similarly the parameters for gbm algorithm were set with function ```expand.grid()``` in order to reduce the computing time. 
+```{r, cache=TRUE}
+library(gbm)
+control <- trainControl(method="cv", number =10)
+metric <- "Accuracy"
+
+## Linear Discriminant Analysis
+set.seed(seed)
+fit.lda <- train(classe~., data=training, method="lda", metric=metric, trControl=control)
+
+## Support Vector Machine
+set.seed(seed)
+fit.svm <- train(classe~., data=training, method="svmRadial", metric=metric, trControl=control)
+
+## Random Forest
+set.seed(seed)
+fit.rf <- train(classe~., data=training, method="rf", trControl=control, ntree=30)
+
+## Generalized Boosted Modeling (Stochastic Gradient Boosting)
+gbmGrid <-  expand.grid(interaction.depth = c(1, 5, 9),
+                        n.trees = (1:10)*2,
+                        shrinkage = 0.1,
+                        n.minobsinnode = 10)
+set.seed(seed)
+fit.gbm <- train(classe~., data=training, method="gbm", metric=metric, trControl=control, verbose=FALSE, tuneGrid = gbmGrid)
+```
+
+# Model evaluation
+The comparison between models was by applying the fit for the ```validation``` dataset and were compared with the true values with function ```confusionMatrix()```.  
+
+```{r, cache=TRUE}
+library(caret)
+confusionMatrix(validation$classe, predict(fit.lda,validation))
+confusionMatrix(validation$classe, predict(fit.svm,validation))
+confusionMatrix(validation$classe, predict(fit.rf,validation))
+confusionMatrix(validation$classe, predict(fit.gbm,validation))
+```
+
+Model fitted with random forest shows Accuracy = 1, meaning the algorithm predicted correctly all the cases in the validation set. The CI is 95% CI : (0.9991, 1). These results were the best among tested models and therefore, model constructed with random forest was used to predict the cases form testing dataset. 
+
+# Prediction of 20 different cases from ```testing``` dataset with random forest
+
+```{r}
+# Predict new values
+predict(fit.rf, newdata=testing)
+```
