@@ -125,7 +125,7 @@ $(document).ready(function () {
 
 <div id="background" class="section level1">
 <h1>Background</h1>
-<p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).</p>
+<p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).</p>
 </div>
 <div id="data" class="section level1">
 <h1>Data</h1>
@@ -135,7 +135,7 @@ $(document).ready(function () {
 </div>
 <div id="summary" class="section level1">
 <h1>Summary</h1>
-<p>First a data frame containing only variables useful as predictors was created. Next different models - linear discriminant analysis, support vector machine, random forest, and generalized boosted modeling - were applied to fit the training data set. Testing the models on validation set indicated accuracy of random forest equal to 1, with CI equal to (0.9991, 1).This was the best result in compare to other models. Therefore the random forest was the final model used to predict the manner of activity for the 20 cases of testing dataset.</p>
+<p>First a data frame containing only variables useful as predictors was created. Next different models - linear discriminant analysis, support vector machine, random forest, and generalized boosted modeling - were applied to fit the training data set. Testing the models on the validation set indicated accuracy of random forest equal to 1, with CI equal to (0.9991, 1).This was the best result in compare to other models. Therefore, the random forest was the final model used to predict the manner of activity for the 20 cases in testing dataset.</p>
 </div>
 <div id="download-and-load-the-data" class="section level1">
 <h1>Download and load the data</h1>
@@ -172,7 +172,7 @@ validation &lt;- training[-inTrain,]</code></pre>
 </div>
 <div id="creating-data-frame-with-predictors" class="section level1">
 <h1>Creating data frame with predictors</h1>
-<p>There is a lot of columns with mostly NA values and hence this features will not be useful as predictors. Therefore, these columns will not be considered in the model.</p>
+<p>There are many columns with mostly NA values and hence these features will not be useful as predictors. Therefore, these columns will not be considered in the model.</p>
 <pre class="r"><code># Delete columns with mostly NA
 temp &lt;- apply(training, 2, is.na)
 noNa &lt;-  which((colSums(temp)) == 0)
@@ -219,7 +219,7 @@ dim(training)</code></pre>
 </div>
 <div id="model-fitting" class="section level1">
 <h1>Model fitting</h1>
-<p>Different models were fit in order to find the one with the best performance. The resampling method for all models was set to cross validation (<code>method</code>=“cv”) by function <code>trainControl()</code>. The number of k-fold was set to 10 (the default value). For random forest the <code>ntree</code> was set to 30 to have reasonable computing time. Similarly the parameters for gbm algorithm were set with function <code>expand.grid()</code> in order to reduce the computing time.</p>
+<p>Different models were applied in order to find the one with the best performance. The resampling method for all models was set to cross validation (<code>method</code>=“cv”) by function <code>trainControl()</code>. The number of k-fold was set to 10 (the default value). For random forest the <code>ntree</code> was set to 30 to have reasonable computing time. Similarly the parameters for gbm algorithm were set with function <code>expand.grid()</code> in order to reduce the computing time.</p>
 <pre class="r"><code>library(gbm)
 control &lt;- trainControl(method=&quot;cv&quot;, number =10)
 metric &lt;- &quot;Accuracy&quot;
@@ -246,7 +246,7 @@ fit.gbm &lt;- train(classe~., data=training, method=&quot;gbm&quot;, metric=metr
 </div>
 <div id="model-evaluation" class="section level1">
 <h1>Model evaluation</h1>
-<p>The comparison between models was by applying the fit for the <code>validation</code> dataset and were compared with the true values with function <code>confusionMatrix()</code>.</p>
+<p>The comparison between models was done by using them to predict outcome for the <code>validation</code> dataset. The predicted values were compared with the true values by function <code>confusionMatrix()</code>.</p>
 <pre class="r"><code>library(caret)
 confusionMatrix(validation$classe, predict(fit.lda,validation))</code></pre>
 <pre><code>## Confusion Matrix and Statistics
@@ -376,7 +376,7 @@ confusionMatrix(validation$classe, predict(fit.lda,validation))</code></pre>
 ## Detection Rate         0.2810   0.1885   0.1773   0.1550   0.1841
 ## Detection Prevalence   0.2820   0.1921   0.1795   0.1591   0.1873
 ## Balanced Accuracy      0.9938   0.9870   0.9899   0.9906   0.9941</code></pre>
-<p>Model fitted with random forest shows Accuracy = 1, meaning the algorithm predicted correctly all the cases in the validation set. The CI is 95% CI : (0.9991, 1). These results were the best among tested models and therefore, model constructed with random forest was used to predict the cases form testing dataset.</p>
+<p>Model constructed with random forest shows Accuracy = 1, meaning the algorithm predicted correctly all the cases in the validation set. The 95% CI: (0.9991, 1). These results were the best among tested models and therefore, model constructed with random forest was used to predict the cases from testing dataset.</p>
 </div>
 <div id="prediction-of-20-different-cases-from-testing-dataset-with-random-forest" class="section level1">
 <h1>Prediction of 20 different cases from <code>testing</code> dataset with random forest</h1>

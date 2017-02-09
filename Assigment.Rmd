@@ -8,7 +8,7 @@ output: html_document
 
 # Background
 
-Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
 In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
 
 # Data
@@ -22,7 +22,7 @@ https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har
 
 # Summary
-First a data frame containing only variables useful as predictors was created. Next different models - linear  discriminant analysis, support vector machine, random forest, and generalized boosted modeling -  were applied to fit the training data set. Testing the models on validation set indicated accuracy of random forest equal to 1, with CI equal to (0.9991, 1).This was the best result in compare to other models. Therefore the random forest was the final model used to predict the manner of activity for the 20 cases of testing dataset. 
+First a data frame containing only variables useful as predictors was created. Next different models - linear discriminant analysis, support vector machine, random forest, and generalized boosted modeling -  were applied to fit the training data set. Testing the models on the validation set indicated accuracy of random forest equal to 1, with CI equal to (0.9991, 1).This was the best result in compare to other models. Therefore, the random forest was the final model used to predict the manner of activity for the 20 cases in testing dataset. 
 
 
 ```{r setup, include=FALSE}
@@ -51,7 +51,7 @@ testing <- testing[,-1]
 seed <- 123
 ```
 
-# Create ```training```  and ```validation``` dataset (```validation``` will be used to validate the out of sample error)
+# Create ```training``` and ```validation``` dataset (```validation``` will be used to validate the out of sample error)
 ```{r}
 library(caret)
 set.seed(seed)
@@ -71,7 +71,7 @@ str(training)
 ```
 
 # Creating data frame with predictors
-There is a lot of columns with mostly NA values and hence this features will not be useful as predictors. Therefore, these columns will not be considered in the model.
+There are many columns with mostly NA values and hence these features will not be useful as predictors. Therefore, these columns will not be considered in the model.
 
 ```{r}
 # Delete columns with mostly NA
@@ -108,7 +108,7 @@ dim(training)
 
 
 # Model fitting
-Different models were fit in order to find the one with the best performance. 
+Different models were applied in order to find the one with the best performance. 
 The resampling method for all models was set to cross validation (```method```="cv") by function ```trainControl()```. The number of k-fold was set to 10 (the default value). 
 For random forest the ```ntree``` was set to 30 to have reasonable computing time. Similarly the parameters for gbm algorithm were set with function ```expand.grid()``` in order to reduce the computing time. 
 ```{r, cache=TRUE}
@@ -138,7 +138,7 @@ fit.gbm <- train(classe~., data=training, method="gbm", metric=metric, trControl
 ```
 
 # Model evaluation
-The comparison between models was by applying the fit for the ```validation``` dataset and were compared with the true values with function ```confusionMatrix()```.  
+The comparison between models was done by using them to predict outcome for the ```validation``` dataset. The predicted values were compared with the true values by function ```confusionMatrix()```.  
 
 ```{r, cache=TRUE}
 library(caret)
@@ -148,7 +148,7 @@ confusionMatrix(validation$classe, predict(fit.rf,validation))
 confusionMatrix(validation$classe, predict(fit.gbm,validation))
 ```
 
-Model fitted with random forest shows Accuracy = 1, meaning the algorithm predicted correctly all the cases in the validation set. The CI is 95% CI : (0.9991, 1). These results were the best among tested models and therefore, model constructed with random forest was used to predict the cases form testing dataset. 
+Model constructed with random forest shows Accuracy = 1, meaning the algorithm predicted correctly all the cases in the validation set. The 95% CI: (0.9991, 1). These results were the best among tested models and therefore, model constructed with random forest was used to predict the cases from testing dataset. 
 
 # Prediction of 20 different cases from ```testing``` dataset with random forest
 
